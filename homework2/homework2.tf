@@ -39,3 +39,6 @@ resource "aws_iam_group_membership" "team" {
 
   group = aws_iam_group.blackpink.name
 }
+
+#import aws_s3_bucket.kaizen-peterson kaizen-peterson
+#terraform import aws_s3_bucket.devops kaizen-devops
