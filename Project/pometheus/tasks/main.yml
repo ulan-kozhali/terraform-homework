@@ -1,0 +1,102 @@
+- name: Download prometheus
+  ansible.builtin.get_url:
+    url: https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+    dest: /tmp/prometheus.tar.gz
+
+- name: Extract prometheus
+  ansible.builtin.unarchive:
+    src: /tmp/prometheus.tar.gz
+    dest: /tmp/prometheus
+    remote_src: yes
+
+- name: Create directories  
+  ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      owner: prometheus  
+      group: prometheus  
+  # with_items:          
+##
+
+- name: Copy binary files
+  ansible.builtin.copy:
+    src: /tmp/prometheus/prometheus
+    dest: /usr/local/bin/prometheus
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy files
+  ansible.builtin.copy:
+    src: /tmp/prometheus/promtool 
+    dest: /usr/local/bin/promtool
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy directory contents
+  ansible.builtin.copy:
+    src: /tmp/prometheus/consoles
+    dest: /etc/prometheus/consoles
+    owner: prometheus
+    group: prometheus
+    directory_mode: yes
+    remote_src: yes 
+
+
+- name: Copy directory contents
+  ansible.builtin.copy:
+    src: /tmp/prometheus/console_libraries
+    dest: /etc/prometheus/console_libraries
+    owner: prometheus
+    group: prometheus
+    directory_mode: yes
+    remote_src: yes 
+
+- name: Copy files
+  ansible.builtin.copy:
+    src: /tmp/prometheus/prometheus.yml
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    remote_src: yes
+
+- name: Create Prometheus systemd service unit file
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus
+      Wants=network-online.target
+      After=network-online.target
+
+      StartLimitIntervalSec=500
+      StartLimitBurst=5
+
+      [Service]
+      User=prometheus
+      Group=prometheus
+      Type=simple
+      Restart=on-failure
+      RestartSec=5s
+      ExecStart=/usr/local/bin/prometheus \
+        --config.file=/etc/prometheus/prometheus.yml \
+        --storage.tsdb.path=/data \
+        --web.console.templates=/etc/prometheus/consoles \
+        --web.console.libraries=/etc/prometheus/console_libraries \
+        --web.listen-address=0.0.0.0:9090 \
+        --web.enable-lifecycle
+
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+    
+- name: Start service prometheus
+  ansible.builtin.service:
+    name: prometheus
+    state: started
+    enabled: yes
+
+
+
+
