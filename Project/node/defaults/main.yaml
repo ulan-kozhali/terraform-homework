@@ -1,0 +1,7 @@
+node_exporter_url: https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+node_exporter_tmp_file: /tmp/node_exporter.tar.gz
+node_exporter_tmp_dir: /tmp/node_exporter
+node_exporter_bin_path: /usr/local/bin/node_exporter
+node_exporter_service_path: /etc/systemd/system/node_exporter.service
+node_exporter_service_name: node_exporter
+prometheus_reload_url: http://localhost:9090/-/reload

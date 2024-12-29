@@ -1,0 +1,50 @@
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https 
+      - software-properties-common
+    state: present
+
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: "{{ grafana_gpg_key_url }}"
+    state: present
+
+- name: Add repository into sources list
+  ansible.builtin.apt_repository:
+    repo: "{{ grafana_repo }}""
+    state: present
+    filename: "{{ grafana_repo_filename }}"
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+
+- name: Start service grafana
+  ansible.builtin.service:
+    name: "{{ grafana_service_name }}"
+    state: started
+    enabled: yes
+
+- name: Create datasources.yaml file
+  ansible.builtin.copy:
+    dest: "{{ grafana_datasource_config_path }}"
+    content: |
+      apiVersion: 1
+      datasources:
+      - name: "{{ prometheus_datasource_name }}"
+        type: prometheus
+        url: "{{ prometheus_url }}"
+        isDefault: true
+
+- name: Restart service httpd, in all cases
+  ansible.builtin.service:
+    name: "{{ grafana_service_name }}"
+    state: restarted
+         
+
+
+
+
+
