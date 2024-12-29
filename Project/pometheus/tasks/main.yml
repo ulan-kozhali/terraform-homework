@@ -1,67 +1,75 @@
-- name: Download prometheus
+- name: Create Prometheus system user and group
+  ansible.builtin.user:
+    name: "{{ prometheus_user }}" # CHANGED
+    system: true
+    create_home: "{{ prometheus_create_home | default(false) }}" # CHANGED
+    shell: "{{ prometheus_shell | default('/bin/false') }}" # CHANGED
+    state: present 
+
+- name: Download Prometheus
   ansible.builtin.get_url:
-    url: https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
-    dest: /tmp/prometheus.tar.gz
+    url: "{{ prometheus_download_url }}" # CHANGED
+    dest: "{{ prometheus_download_dest }}" # CHANGED
 
-- name: Extract prometheus
+- name: Extract Prometheus
   ansible.builtin.unarchive:
-    src: /tmp/prometheus.tar.gz
-    dest: /tmp/prometheus
+    src: "{{ prometheus_download_dest }}" # CHANGED
+    dest: "{{ prometheus_extracted_dir }}" # CHANGED
     remote_src: yes
 
-- name: Create directories  
+- name: Create directories
   ansible.builtin.file:
-      path: "{{ item }}"
-      state: directory
-      owner: prometheus  
-      group: prometheus  
-  # with_items:          
-##
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ prometheus_user }}" # CHANGED
+    group: "{{ prometheus_user }}" # CHANGED
+  with_items:
+    - "{{ prometheus_data_dir }}" # CHANGED
+    - "{{ prometheus_config_dir }}" # CHANGED
 
-- name: Copy binary files
+- name: Copy Prometheus binary
   ansible.builtin.copy:
-    src: /tmp/prometheus/prometheus
-    dest: /usr/local/bin/prometheus
+    src: "{{ prometheus_extracted_dir }}/prometheus" # CHANGED
+    dest: "{{ prometheus_bin_path }}/prometheus" # CHANGED
     mode: '0755'
     remote_src: yes
 
-- name: Copy files
+- name: Copy Promtool binary
   ansible.builtin.copy:
-    src: /tmp/prometheus/promtool 
-    dest: /usr/local/bin/promtool
+    src: "{{ prometheus_extracted_dir }}/promtool" # CHANGED
+    dest: "{{ prometheus_bin_path }}/promtool" # CHANGED
     mode: '0755'
     remote_src: yes
 
-- name: Copy directory contents
+- name: Copy consoles directory
   ansible.builtin.copy:
-    src: /tmp/prometheus/consoles
-    dest: /etc/prometheus/consoles
-    owner: prometheus
-    group: prometheus
+    src: "{{ prometheus_extracted_dir }}/consoles" # CHANGED
+    dest: "{{ prometheus_consoles_dir }}" # CHANGED
+    owner: "{{ prometheus_user }}" # CHANGED
+    group: "{{ prometheus_user }}" # CHANGED
     directory_mode: yes
-    remote_src: yes 
+    remote_src: yes
 
-
-- name: Copy directory contents
+- name: Copy console libraries directory
   ansible.builtin.copy:
-    src: /tmp/prometheus/console_libraries
-    dest: /etc/prometheus/console_libraries
-    owner: prometheus
-    group: prometheus
+    src: "{{ prometheus_extracted_dir }}/console_libraries" # CHANGED
+    dest: "{{ prometheus_console_libraries_dir }}" # CHANGED
+    owner: "{{ prometheus_user }}" # CHANGED
+    group: "{{ prometheus_user }}" # CHANGED
     directory_mode: yes
-    remote_src: yes 
+    remote_src: yes
 
-- name: Copy files
+- name: Copy Prometheus configuration
   ansible.builtin.copy:
-    src: /tmp/prometheus/prometheus.yml
-    dest: /etc/prometheus/prometheus.yml
-    owner: prometheus
-    group: prometheus
+    src: "{{ prometheus_extracted_dir }}/prometheus.yml" # CHANGED
+    dest: "{{ prometheus_config_dir }}/prometheus.yml" # CHANGED
+    owner: "{{ prometheus_user }}" # CHANGED
+    group: "{{ prometheus_user }}" # CHANGED
     remote_src: yes
 
 - name: Create Prometheus systemd service unit file
   ansible.builtin.copy:
-    dest: /etc/systemd/system/prometheus.service
+    dest: "{{ prometheus_service_path }}" # CHANGED
     content: |
       [Unit]
       Description=Prometheus
@@ -72,16 +80,16 @@
       StartLimitBurst=5
 
       [Service]
-      User=prometheus
-      Group=prometheus
+      User={{ prometheus_user }} # CHANGED
+      Group={{ prometheus_user }} # CHANGED
       Type=simple
       Restart=on-failure
       RestartSec=5s
-      ExecStart=/usr/local/bin/prometheus \
-        --config.file=/etc/prometheus/prometheus.yml \
-        --storage.tsdb.path=/data \
-        --web.console.templates=/etc/prometheus/consoles \
-        --web.console.libraries=/etc/prometheus/console_libraries \
+      ExecStart={{ prometheus_bin_path }}/prometheus \ # CHANGED
+        --config.file={{ prometheus_config_dir }}/prometheus.yml \ # CHANGED
+        --storage.tsdb.path={{ prometheus_data_dir }} \ # CHANGED
+        --web.console.templates={{ prometheus_consoles_dir }} \ # CHANGED
+        --web.console.libraries={{ prometheus_console_libraries_dir }} \ # CHANGED
         --web.listen-address=0.0.0.0:9090 \
         --web.enable-lifecycle
 
@@ -90,13 +98,9 @@
     owner: root
     group: root
     mode: '0644'
-    
-- name: Start service prometheus
+
+- name: Start Prometheus service
   ansible.builtin.service:
     name: prometheus
     state: started
     enabled: yes
-
-
-
-
