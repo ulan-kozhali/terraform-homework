@@ -31,6 +31,7 @@ resource "aws_instance" "web" {
 }
 
 
-output ec2 {
+output "ec2" { 
     value = aws_instance.web.public_ip
 }
+

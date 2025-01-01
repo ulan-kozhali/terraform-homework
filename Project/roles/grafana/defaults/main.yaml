@@ -1,7 +1,8 @@
-grafana_gpg_key_url: https://packages.grafana.com/gpg.key
-grafana_repo: "deb https://packages.grafana.com/oss/deb stable main"
-grafana_repo_filename: grafana_ansible
-grafana_service_name: grafana-server
-grafana_datasource_config_path: /etc/grafana/provisioning/datasources/datasources.yaml
-prometheus_datasource_name: Prometheus
-prometheus_url: http://18.223.187.127:9090
+# prometheus_ip=${INSTANCE_IP}
+# grafana_gpg_key_url: https://packages.grafana.com/gpg.key
+# grafana_repo: "deb https://packages.grafana.com/oss/deb stable main"
+# grafana_repo_filename: grafana_ansible
+# grafana_service_name: grafana-server
+# grafana_datasource_config_path: /etc/grafana/provisioning/datasources/datasources.yaml
+# prometheus_datasource_name: Prometheus
+# prometheus_url: http://3.135.201.117:9090

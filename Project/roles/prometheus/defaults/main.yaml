@@ -1,14 +1,14 @@
-prometheus_user: prometheus
-prometheus_create_home: false
-prometheus_shell: /bin/false
+# prometheus_user: prometheus
+# prometheus_create_home: false
+# prometheus_shell: /bin/false
 
-prometheus_download_url: https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
-prometheus_download_dest: /tmp/prometheus.tar.gz
-prometheus_extracted_dir: /tmp
+# prometheus_download_url: https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+# prometheus_download_dest: /tmp/prometheus.tar.gz
+# prometheus_extracted_dir: /tmp/prometheus-2.45.0.linux-amd64/
 
-prometheus_data_dir: /data
-prometheus_config_dir: /etc/prometheus
-prometheus_bin_path: /usr/local/bin
-prometheus_consoles_dir: /etc/prometheus/consoles
-prometheus_console_libraries_dir: /etc/prometheus/console_libraries
-prometheus_service_path: /etc/systemd/system/prometheus.service
+# prometheus_data_dir: /data
+# prometheus_config_dir: /etc/prometheus
+# prometheus_bin_path: /usr/local/bin
+# prometheus_consoles_dir: /etc/prometheus
+# prometheus_console_libraries_dir: /etc/prometheus
+# prometheus_service_path: /etc/systemd/system/prometheus.service

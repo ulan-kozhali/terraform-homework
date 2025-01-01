@@ -1,34 +1,32 @@
-- name: Create prometheus system user and group
+- name: Create Node Exporter system user and group
   ansible.builtin.user:
-    name: "{{ node_exporter_user }}"
+    name: node_exporter
     system: true
-    create_home: "{{ node_exporter_create_home | default(false) }}"
-    shell: "{{ node_exporter_shell | default('/bin/false') }}"
-    state: present 
+    create_home: false
+    shell: /bin/false
+    state: present
 
-- name: Download node_exporter
+- name: Download Node Exporter
   ansible.builtin.get_url:
-    url: "{{ node_exporter_url }}"
-    dest: "{{ node_exporter_tmp_file }}"
+    url: https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+    dest: /tmp/node_exporter.tar.gz
 
-- name: Extract prometheus
+- name: Extract Node Exporter
   ansible.builtin.unarchive:
-    src: "{{ node_exporter_tmp_file }}"
-    dest: "{{ node_exporter_tmp_dir }}"
+    src: /tmp/node_exporter.tar.gz
+    dest: /tmp
     remote_src: yes
 
-
-- name: Copy binary files
+- name: Copy Node Exporter binary
   ansible.builtin.copy:
-    src: "{{ node_exporter_tmp_dir }}"
-    dest: "{{ node_exporter_bin_path }}/usr/local/bin/node_exporter"
+    src: /tmp/node_exporter-1.6.1.linux-amd64/node_exporter
+    dest: /usr/local/bin/
     mode: '0755'
     remote_src: yes
 
-
-- name: Create Prometheus systemd service unit file
+- name: Create Node Exporter systemd service unit file
   ansible.builtin.copy:
-    dest: "{{ node_exporter_service_path }}"
+    dest: /etc/systemd/system/node_exporter.service
     content: |
       [Unit]
       Description=Node Exporter
@@ -52,21 +50,20 @@
     owner: root
     group: root
     mode: '0644'
-    
-- name: Start service node_exporter
+
+- name: Start Node Exporter service
   ansible.builtin.service:
-    name: "{{ node_exporter_service_name }}"
+    name: node_exporter
     state: started
     enabled: yes
 
-
-- name: Add Node Exporter as a target in Prometheus
+- name: Add Node Exporter as a target in Prometheus (assuming prometheus.yml is in /etc/prometheus/)
   ansible.builtin.blockinfile:
-    path: "{{ prometheus_config_path }}"
+    path: /etc/prometheus/prometheus.yml
     block: |
-        - job_name: 'node_export'
-          static_configs:
-            - targets: ["localhost:9100"]
+      - job_name: 'node_export'
+        static_configs:
+          - targets: ["localhost:9100"]
     insertafter: '^scrape_configs:'
     marker: "# {mark} ANSIBLE MANAGED BLOCK FOR NODE_EXPORTER"
     owner: prometheus
@@ -80,17 +77,9 @@
   failed_when: validate_result.rc != 0
   changed_when: false
 
-
-- name: Reload Prometheus configuration
+- name: Reload Prometheus configuration (assuming Prometheus listens on http://localhost:9090)
   ansible.builtin.uri:
-    url: "{{ prometheus_reload_url }}"
+    url: http://localhost:9090/-/reload
     method: POST
     status_code: 200
   register: reload_result
-
-
-      
-
-
-
-
