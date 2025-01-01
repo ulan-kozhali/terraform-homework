@@ -1,0 +1,106 @@
+- name: Create Prometheus system user and group
+  ansible.builtin.user:
+    name: "{{ prometheus_user }}" 
+    system: true
+    create_home: "{{ prometheus_create_home | default(false) }}" 
+    shell: "{{ prometheus_shell | default('/bin/false') }}" 
+    state: present 
+
+- name: Download Prometheus
+  ansible.builtin.get_url:
+    url: "{{ prometheus_download_url }}" 
+    dest: "{{ prometheus_download_dest }}" 
+
+- name: Extract Prometheus
+  ansible.builtin.unarchive:
+    src: "{{ prometheus_download_dest }}" 
+    dest: "{{ prometheus_extracted_dir }}" 
+    remote_src: yes
+
+- name: Create directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ prometheus_user }}" 
+    group: "{{ prometheus_user }}" 
+  with_items:
+    - "{{ prometheus_data_dir }}" 
+    - "{{ prometheus_config_dir }}" 
+
+- name: Copy Prometheus binary
+  ansible.builtin.copy:
+    src: "{{ prometheus_extracted_dir }}" 
+    dest: "{{ prometheus_bin_path }}/prometheus" 
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy Promtool binary
+  ansible.builtin.copy:
+    src: "{{ prometheus_extracted_dir }}" 
+    dest: "{{ prometheus_bin_path }}/promtool" 
+    mode: '0755'
+    remote_src: yes
+
+- name: Copy consoles directory
+  ansible.builtin.copy:
+    src: "{{ prometheus_extracted_dir }}" 
+    dest: "{{ prometheus_consoles_dir }}" 
+    owner: "{{ prometheus_user }}" 
+    group: "{{ prometheus_user }}" 
+    directory_mode: yes
+    remote_src: yes
+
+- name: Copy console libraries directory
+  ansible.builtin.copy:
+    src: "{{ prometheus_extracted_dir }}" 
+    dest: "{{ prometheus_console_libraries_dir }}" 
+    owner: "{{ prometheus_user }}" 
+    group: "{{ prometheus_user }}" 
+    directory_mode: yes
+    remote_src: yes
+
+- name: Copy Prometheus configuration
+  ansible.builtin.copy:
+    src: "{{ prometheus_extracted_dir }}" 
+    dest: "{{ prometheus_config_dir }}/prometheus.yml" 
+    owner: "{{ prometheus_user }}" 
+    group: "{{ prometheus_user }}" 
+    remote_src: yes
+
+- name: Create Prometheus systemd service unit file
+  ansible.builtin.copy:
+    dest: "{{ prometheus_service_path }}" 
+    content: |
+      [Unit]
+      Description=Prometheus
+      Wants=network-online.target
+      After=network-online.target
+
+      StartLimitIntervalSec=500
+      StartLimitBurst=5
+
+      [Service]
+      User={{ prometheus_user }} 
+      Group={{ prometheus_user }} 
+      Type=simple
+      Restart=on-failure
+      RestartSec=5s
+      ExecStart={{ prometheus_bin_path }}/prometheus \ 
+        --config.file={{ prometheus_config_dir }}/prometheus.yml \ 
+        --storage.tsdb.path={{ prometheus_data_dir }} \ 
+        --web.console.templates={{ prometheus_consoles_dir }} \ 
+        --web.console.libraries={{ prometheus_console_libraries_dir }} \ 
+        --web.listen-address=0.0.0.0:9090 \
+        --web.enable-lifecycle
+
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Start Prometheus service
+  ansible.builtin.service:
+    name: prometheus
+    state: started
+    enabled: yes

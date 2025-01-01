@@ -12,7 +12,7 @@
 
 - name: Add repository into sources list
   ansible.builtin.apt_repository:
-    repo: "{{ grafana_repo }}""
+    repo: "{{ grafana_repo }}"
     state: present
     filename: "{{ grafana_repo_filename }}"
 

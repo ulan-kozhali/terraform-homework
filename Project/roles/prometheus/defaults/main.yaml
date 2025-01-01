@@ -4,7 +4,7 @@ prometheus_shell: /bin/false
 
 prometheus_download_url: https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
 prometheus_download_dest: /tmp/prometheus.tar.gz
-prometheus_extracted_dir: /tmp/prometheys
+prometheus_extracted_dir: /tmp
 
 prometheus_data_dir: /data
 prometheus_config_dir: /etc/prometheus

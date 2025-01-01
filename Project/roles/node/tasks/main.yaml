@@ -21,7 +21,7 @@
 - name: Copy binary files
   ansible.builtin.copy:
     src: "{{ node_exporter_tmp_dir }}"
-    dest: "{{ node_exporter_bin_path }}"/usr/local/bin/node_exporter
+    dest: "{{ node_exporter_bin_path }}/usr/local/bin/node_exporter"
     mode: '0755'
     remote_src: yes
 
