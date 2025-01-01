@@ -21,19 +21,16 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
-  key_name      = aws_key_pair.deployer.key_name
+  key_name = "project-key"
+  vpc_security_group_ids = [aws_security_group.allow_tls.id]
 
   tags = {
     Name = "Project"
+  
   }
 }
 
 
 output ec2 {
     value = aws_instance.web.public_ip
-}
-
-resource "aws_key_pair" "deployer" {
-  key_name   = "project-key"
-  public_key = file("~/.ssh/id_rsa.pub")
 }

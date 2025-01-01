@@ -4,4 +4,4 @@ grafana_repo_filename: grafana_ansible
 grafana_service_name: grafana-server
 grafana_datasource_config_path: /etc/grafana/provisioning/datasources/datasources.yaml
 prometheus_datasource_name: Prometheus
-prometheus_url: http://3.140.243.181:9090
+prometheus_url: http://18.223.187.127:9090
