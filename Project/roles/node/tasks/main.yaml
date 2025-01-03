@@ -25,31 +25,9 @@
     remote_src: yes
 
 - name: Create Node Exporter systemd service unit file
-  ansible.builtin.copy:
+  ansible.builtin.template:
+    src: /home/ubuntu/terraform-homework/Project/roles/node/templates/node_exporter.service.j2
     dest: /etc/systemd/system/node_exporter.service
-    content: |
-      [Unit]
-      Description=Node Exporter
-      Wants=network-online.target
-      After=network-online.target
-
-      StartLimitIntervalSec=500
-      StartLimitBurst=5
-
-      [Service]
-      User=node_exporter
-      Group=node_exporter
-      Type=simple
-      Restart=on-failure
-      RestartSec=5s
-      ExecStart=/usr/local/bin/node_exporter \
-        --collector.logind
-
-      [Install]
-      WantedBy=multi-user.target
-    owner: root
-    group: root
-    mode: '0644'
 
 - name: Start Node Exporter service
   ansible.builtin.service:
@@ -57,18 +35,19 @@
     state: started
     enabled: yes
 
-- name: Add Node Exporter as a target in Prometheus (assuming prometheus.yml is in /etc/prometheus/)
+- name: Update file prometheus.yml
   ansible.builtin.blockinfile:
     path: /etc/prometheus/prometheus.yml
     block: |
       - job_name: 'node_export'
-        static_configs:
-          - targets: ["localhost:9100"]
-    insertafter: '^scrape_configs:'
-    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR NODE_EXPORTER"
-    owner: prometheus
-    group: prometheus
-    mode: '0644'
+          static_configs:
+            - targets: ["localhost:9100"]
+
+- name: Fix indentation
+  ansible.builtin.replace:
+    path: /etc/prometheus/prometheus.yml
+    regexp: "^(- job_name: 'node_export')"
+    replace: '  \1'
 
 - name: Validate Prometheus configuration
   ansible.builtin.command:
